@@ -1,0 +1,4 @@
+LONG_VAR=this_is_a_very_long_variable_value_that_should_test_memory_allocation_and_string_handling_properly_without_any_leaks_or_issues_in_the_minimake_implementation
+
+all:
+	@echo $(LONG_VAR)

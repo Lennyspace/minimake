@@ -16,6 +16,8 @@ struct makefile
     char **list_p;
     size_t size_p;
     size_t cap_p;
+
+    bool is_been_executed;
 };
 
 struct makefile *init_makefile(void);

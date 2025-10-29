@@ -6,11 +6,22 @@ struct list_target *init_list_target(void)
     list_t->size = 0;
     list_t->capacity = 8;
     list_t->list = malloc(8 * sizeof(struct target *));
+
+
     return list_t;
 }
 
 void add_list_target(struct list_target *list_t, struct target *target)
 {
+    for(size_t i=0;i<list_t->size;i++)
+    {
+        if(strcmp(list_t->list[i]->name,target->name)==0)
+        {
+            free_target(list_t->list[i]);
+            list_t->list[i]=target;
+            return;
+        }
+    }
     if (list_t->size == list_t->capacity)
     {
         list_t->list = realloc(list_t->list,
@@ -76,6 +87,8 @@ struct target *init_target(char *name)
 
     targ->is_pattern = is_target_pattern(name);
     targ->is_phony = false;
+
+    targ->has_been_executed = false;
 
     return targ;
 }

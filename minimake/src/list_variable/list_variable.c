@@ -11,6 +11,15 @@ struct list_variable *init_list_variable(void)
 
 void add_list_variable(struct list_variable *list_v, struct variable *var)
 {
+    for (size_t i = 0; i < list_v->size; i++)
+    {
+        if (strcmp(list_v->list[i]->name, var->name) == 0)
+        {
+            free_variable(list_v->list[i]);
+            list_v->list[i] = var;
+            return;
+        }
+    }
     if (list_v->size == list_v->capacity)
     {
         list_v->list = realloc(

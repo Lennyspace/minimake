@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 struct target
 {
     char *name;
@@ -19,6 +20,8 @@ struct target
 
     bool is_pattern;
     bool is_phony;
+    
+    bool has_been_executed;
 };
 
 struct list_target

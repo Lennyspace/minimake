@@ -131,16 +131,17 @@ int exec_target_recipes(struct makefile *make, struct target *targ)
 
 int exec_target_and_dep(struct makefile *make, struct target *targ)
 {
+    targ->has_been_executed = true;
     for (size_t i = 0; i < targ->size_dep; i++)
     {
         struct target *targ_d =
             get_target_with_name(make, targ->dependencies[i]);
         if (targ_d == NULL)
         {
-            continue;
+            fprintf(stderr,"missing dep target\n");
+	    return 2;
         }
-        if ((nothing_to_be_done(make, targ_d) || is_up_to_date(make, targ_d))
-            && !is_in_list_phony(make, targ_d))
+        if (((nothing_to_be_done(make, targ_d) || is_up_to_date(make, targ_d)) && (!is_in_list_phony(make, targ_d))) || targ_d->has_been_executed)
         {
             continue;
         }
@@ -256,6 +257,9 @@ static struct target *looking_for_pattern(struct makefile *make,
                 stem_if_valid(targ->name, name_target); // stem pas vide
             if (stem)
             {
+                 if (stem_res) {
+                    free(stem_res);
+                }
                 if (strlen(stem) < min)
                 {
                     min = strlen(stem);
@@ -290,6 +294,8 @@ struct target *get_target_with_name(struct makefile *make, char *name_target)
     if (targ == NULL)
     {
         targ = looking_for_pattern(make, name_target);
+        add_list_target(make->list_t, targ);
+        return targ;
     }
     return targ;
 }

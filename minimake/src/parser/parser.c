@@ -57,6 +57,32 @@ char get_first_sep(char *line)
     }
     return 0;
 }
+static bool is_valid_VAR_name_after_extend(char *line)
+{
+    int i = 0;
+    while (line[i] && (line[i] == ' ' || line[i] == '\t'))
+    {
+        i++;
+    }
+    if (line[i] == 0)
+    {
+        return false; // empty name
+    }
+    while (line[i] != ' ' && line[i] != '\t' && line[i] != 0)
+    {
+        if (line[i] == '#')
+        {
+            return false;
+        }
+        i++;
+    }
+    if (line[i] == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 
 static bool is_valid_VAR_name(char *line)
 {
@@ -105,6 +131,31 @@ static bool is_not_empty_and_no_hashtag(char *line)
     return i != 0;
 }
 
+static bool is_valid_TARGET_name_afer_extend(char *line){
+    int i = 0;
+    while (line[i] == ' ' || line[i] == '\t')
+    {
+        i++;
+    }
+    if (line[i] == 0)
+    {
+        return true; // empty name
+    }
+    while (line[i] != ' ' && line[i] != '\t' && line[i] != 0)
+    {
+        if (line[i] == '#')
+        {
+            return false;
+        }
+        i++;
+    }
+    if (line[i] == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 static bool is_valid_TARGET_name(char *line)
 {
     int i = 0;
@@ -114,7 +165,7 @@ static bool is_valid_TARGET_name(char *line)
     }
     if (line[i] == 0)
     {
-        return false; // empty name
+        return true; // empty name
     }
     while (line[i] != ' ' && line[i] != '\t' && line[i] != ':')
     {
@@ -177,8 +228,17 @@ static int rec_is_valid_syntax(char *str, int i, char stop)
         {
             if (str[i + 1] == 0)
             {
+                if(stop!=0)
+                {
+                    return -1;
+                }
                 i++;
-                break;
+
+            }
+            if (str[i + 1] == '$')
+            {
+                i += 2;
+                continue;
             }
             if (str[i + 1] == '{')
             {
@@ -198,17 +258,26 @@ static int rec_is_valid_syntax(char *str, int i, char stop)
                 }
                 continue;
             }
+            if(str[i+1]==' '){
+                return -1;
+            }
         }
         i++;
     }
-
-    if (str[i] == 0 && stop == 0)
+    if(stop==0)
     {
-        return -2; // succes
+        if(str[i]==0)
+        {
+            return -2; // succes
+        }
+        else
+        {
+            return -1;
+        }
     }
-    if (str[i] == 0)
+    if(str[i]!=stop)
     {
-        return -1; // pas de fermeture
+        return -1;
     }
     return i + 1;
 }
@@ -337,6 +406,13 @@ static int parser_var(struct makefile *make, char *line)
     char *val = extract_val(line);
 
     char *name_ext = get_name_extended(make, name);
+    if(is_valid_VAR_name_after_extend(name_ext)==false)
+    {
+        free(name);
+        free(val);
+        free(name_ext);
+        return 2;
+    }
 
     free(name);
     if (is_not_empty_and_no_hashtag(name_ext) == false)
@@ -367,7 +443,12 @@ static void parser_add_dependencies(struct makefile *make, struct target *targ,
     while (token)
     {
         char *dep_ext = get_name_extended(make, token);
-        add_target_dependencies(targ, dep_ext);
+        if(dep_ext[0]!=0)
+        {
+            add_target_dependencies(targ, dep_ext);
+        }
+        printf("%s\n",dep_ext);
+        
         token = strtok(NULL, " \t");
     }
     free(deps);
@@ -378,6 +459,12 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
     char *target = extract_target(line_t);
     char *target_ext = get_name_extended(make, target);
     free(target);
+    if(is_valid_TARGET_name_afer_extend(target_ext)==false)
+    {
+        fprintf(stderr, "invalid target name after var extention\n");
+        free(target_ext);
+        return 2;
+    }
 
     struct target *new_targ = init_target(target_ext);
     parser_add_dependencies(make, new_targ, line_t);
@@ -390,6 +477,14 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
     while (getline(&line, &len, file) != -1)
     {
         remove_end(line);
+        if(is_valid_syntax(line)==false)
+        {
+            free(line);
+            free_target(new_targ);
+            error_print(ERROR_INVALID_SYNTAX);
+            
+            return 2;
+        }
         if (is_line_blank(line))
         {
             continue;
@@ -405,6 +500,10 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
             strcpy(rec, line + start); // sans le tab
             add_target_recipes(new_targ, rec);
             pos = ftell(file); // position pour la ligne lu en trop
+        }
+        else if(line[0]=='#')
+        {
+            continue;
         }
         else
         {
@@ -428,6 +527,12 @@ static int parser_phony(struct makefile *make, char *line)
     strcpy(deps, line + i + 1);
 
     char *token = strtok(deps, " \t");
+    if(is_valid_syntax(line)==false)
+    {
+        fprintf(stderr, "invalid syntax in .PHONY\n");
+        free(deps);
+        return 2;
+    }
     while (token)
     {
         char *phon_ext = get_name_extended(make, token);
@@ -452,6 +557,7 @@ int parser(FILE *file, struct makefile *make)
 
         if (type >= ERROR_TAB_NOT_IN_TARGET)
         {
+            free(line);
             error_print(type);
             return 2;
         }
@@ -463,6 +569,7 @@ int parser(FILE *file, struct makefile *make)
         {
             if (parser_var(make, line) == 2)
             {
+                free(line);
                 error_print(ERROR_INVALID_VAR_NAME);
                 return 2;
             }
@@ -471,7 +578,7 @@ int parser(FILE *file, struct makefile *make)
         {
             if (parser_target(file, make, line) == 2)
             {
-                error_print(ERROR_INVALID_TARGET_NAME);
+                free(line);
                 return 2;
             }
         }
@@ -481,6 +588,7 @@ int parser(FILE *file, struct makefile *make)
                 || parser_target(file, make, line) == 2)
             {
                 make->list_t->list[make->list_t->size - 1]->is_phony = true;
+                free(line);
                 fprintf(stderr, "invalid phony\n");
                 error_print(ERROR_INVALID_TARGET_NAME);
                 return 2;

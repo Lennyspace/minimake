@@ -12,6 +12,8 @@ struct makefile *init_makefile(void)
     makefile->list_p = malloc(2 * sizeof(char *));
     makefile->size_p = 0;
     makefile->cap_p = 2;
+
+    makefile->is_been_executed = false;
     return makefile;
 }
 
