@@ -1,3 +1,0 @@
-VAR=42
-all:
-	echo The answer is $(VAR

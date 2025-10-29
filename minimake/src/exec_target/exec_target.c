@@ -138,16 +138,22 @@ int exec_target_and_dep(struct makefile *make, struct target *targ)
             get_target_with_name(make, targ->dependencies[i]);
         if (targ_d == NULL)
         {
-            fprintf(stderr,"missing dep target\n");
-	    return 2;
+            fprintf(stderr,
+                    "minimake: *** No rule to make target '%s', needed by "
+                    "'%s'. Stop.\n",
+                    targ->dependencies[i], targ->name);
+            return 2;
         }
-        if (((nothing_to_be_done(make, targ_d) || is_up_to_date(make, targ_d)) && (!is_in_list_phony(make, targ_d))) || targ_d->has_been_executed)
+        if (((nothing_to_be_done(make, targ_d) || is_up_to_date(make, targ_d))
+             && (!is_in_list_phony(make, targ_d)))
+            || targ_d->has_been_executed)
         {
+            printf("minimake: Nothing to be done for '%s'.\n", targ->name);
+
             continue;
         }
         if (exec_target_and_dep(make, targ_d) == 2)
         {
-            fprintf(stderr, "probleme exec %s\n", targ_d->name);
             return 2;
         }
     }
@@ -197,6 +203,7 @@ char *stem_if_valid(char *pattern, char *name)
         free_string(str_stem);
         return stem_final;
     }
+    free_string(str_stem);
     return NULL;
 }
 char *str_with_stem(char *name, char *stem)
@@ -220,6 +227,7 @@ char *str_with_stem(char *name, char *stem)
             i++;
         }
     }
+    new_str[i_new_str] = '\0';
     return new_str;
 }
 
@@ -257,11 +265,12 @@ static struct target *looking_for_pattern(struct makefile *make,
                 stem_if_valid(targ->name, name_target); // stem pas vide
             if (stem)
             {
-                 if (stem_res) {
-                    free(stem_res);
-                }
                 if (strlen(stem) < min)
                 {
+                    if (stem_res)
+                    {
+                        free(stem_res);
+                    }
                     min = strlen(stem);
                     stem_res = stem;
                     targ_pattern = targ;
@@ -294,7 +303,10 @@ struct target *get_target_with_name(struct makefile *make, char *name_target)
     if (targ == NULL)
     {
         targ = looking_for_pattern(make, name_target);
-        add_list_target(make->list_t, targ);
+        if (targ != NULL)
+        {
+            add_list_target(make->list_t, targ);
+        }
         return targ;
     }
     return targ;

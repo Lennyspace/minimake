@@ -83,7 +83,6 @@ static bool is_valid_VAR_name_after_extend(char *line)
     return false;
 }
 
-
 static bool is_valid_VAR_name(char *line)
 {
     int i = 0;
@@ -131,7 +130,8 @@ static bool is_not_empty_and_no_hashtag(char *line)
     return i != 0;
 }
 
-static bool is_valid_TARGET_name_afer_extend(char *line){
+static bool is_valid_TARGET_name_afer_extend(char *line)
+{
     int i = 0;
     while (line[i] == ' ' || line[i] == '\t')
     {
@@ -228,12 +228,11 @@ static int rec_is_valid_syntax(char *str, int i, char stop)
         {
             if (str[i + 1] == 0)
             {
-                if(stop!=0)
+                if (stop != 0)
                 {
                     return -1;
                 }
                 i++;
-
             }
             if (str[i + 1] == '$')
             {
@@ -258,15 +257,16 @@ static int rec_is_valid_syntax(char *str, int i, char stop)
                 }
                 continue;
             }
-            if(str[i+1]==' '){
+            if (str[i + 1] == ' ')
+            {
                 return -1;
             }
         }
         i++;
     }
-    if(stop==0)
+    if (stop == 0)
     {
-        if(str[i]==0)
+        if (str[i] == 0)
         {
             return -2; // succes
         }
@@ -275,7 +275,7 @@ static int rec_is_valid_syntax(char *str, int i, char stop)
             return -1;
         }
     }
-    if(str[i]!=stop)
+    if (str[i] != stop)
     {
         return -1;
     }
@@ -406,7 +406,7 @@ static int parser_var(struct makefile *make, char *line)
     char *val = extract_val(line);
 
     char *name_ext = get_name_extended(make, name);
-    if(is_valid_VAR_name_after_extend(name_ext)==false)
+    if (is_valid_VAR_name_after_extend(name_ext) == false)
     {
         free(name);
         free(val);
@@ -443,12 +443,15 @@ static void parser_add_dependencies(struct makefile *make, struct target *targ,
     while (token)
     {
         char *dep_ext = get_name_extended(make, token);
-        if(dep_ext[0]!=0)
+        if (dep_ext[0] != 0)
         {
             add_target_dependencies(targ, dep_ext);
         }
-        printf("%s\n",dep_ext);
-        
+        else
+        {
+            free(dep_ext);
+        }
+
         token = strtok(NULL, " \t");
     }
     free(deps);
@@ -459,7 +462,7 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
     char *target = extract_target(line_t);
     char *target_ext = get_name_extended(make, target);
     free(target);
-    if(is_valid_TARGET_name_afer_extend(target_ext)==false)
+    if (is_valid_TARGET_name_afer_extend(target_ext) == false)
     {
         fprintf(stderr, "invalid target name after var extention\n");
         free(target_ext);
@@ -477,12 +480,12 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
     while (getline(&line, &len, file) != -1)
     {
         remove_end(line);
-        if(is_valid_syntax(line)==false)
+        if (is_valid_syntax(line) == false)
         {
             free(line);
             free_target(new_targ);
             error_print(ERROR_INVALID_SYNTAX);
-            
+
             return 2;
         }
         if (is_line_blank(line))
@@ -501,7 +504,7 @@ int parser_target(FILE *file, struct makefile *make, char *line_t)
             add_target_recipes(new_targ, rec);
             pos = ftell(file); // position pour la ligne lu en trop
         }
-        else if(line[0]=='#')
+        else if (line[0] == '#')
         {
             continue;
         }
@@ -527,7 +530,7 @@ static int parser_phony(struct makefile *make, char *line)
     strcpy(deps, line + i + 1);
 
     char *token = strtok(deps, " \t");
-    if(is_valid_syntax(line)==false)
+    if (is_valid_syntax(line) == false)
     {
         fprintf(stderr, "invalid syntax in .PHONY\n");
         free(deps);

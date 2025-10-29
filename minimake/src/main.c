@@ -3,14 +3,15 @@
 static bool check_validity_target_main(struct makefile *make,
                                        struct target *targ_main)
 {
-    if(targ_main->has_been_executed)
+    if (targ_main->has_been_executed)
     {
-        if(!is_in_list_phony(make, targ_main)){
+        if (!is_in_list_phony(make, targ_main))
+        {
             printf("minimake: '%s' is up to date.\n", targ_main->name);
         }
-        else{
-            printf("minimake: Nothing to be done for '%s'.\n",
-                    targ_main->name);
+        else
+        {
+            printf("minimake: Nothing to be done for '%s'.\n", targ_main->name);
         }
         return false;
     }
@@ -18,7 +19,7 @@ static bool check_validity_target_main(struct makefile *make,
     {
         if (nothing_to_be_done(make, targ_main))
         {
-            printf("minimake: Nothing to be done for '%s'.\n",targ_main->name);
+            printf("minimake: Nothing to be done for '%s'.\n", targ_main->name);
             return false;
         }
         else if (is_up_to_date(make, targ_main))
@@ -60,7 +61,9 @@ static int get_list_Makefile_target(int argc, char *argv[],
             i++;
             if (argv[i][0] == 0)
             {
-                fprintf(stderr, "empty argument\n");
+                fprintf(
+                    stderr,
+                    "minimake: *** empty string invalid as argument. Stop.\n");
                 return 2;
             }
 
@@ -78,51 +81,53 @@ static int get_list_Makefile_target(int argc, char *argv[],
     }
     return 0;
 }
-static int free_and_return_exit_code(struct makefile* make,struct argument* arg,int exit_code,char* msg)
+static int free_and_return_exit_code(struct makefile *make,
+                                     struct argument *arg, int exit_code,
+                                     char *msg)
 {
-    if(make!=NULL)
+    if (make != NULL)
     {
         free_makefile(make);
     }
     free_argument(arg);
-    if(exit_code==0 && msg!=NULL)
+    if (exit_code == 0 && msg != NULL)
     {
-        printf("%s",msg);
+        printf("%s", msg);
     }
-    else if(exit_code!=0 && msg!=NULL)
+    else if (exit_code != 0 && msg != NULL)
     {
-        fprintf(stderr,"%s",msg);
+        fprintf(stderr, "%s", msg);
     }
     return exit_code;
 }
 
-static char* get_first_target_makefile(struct makefile* make,struct argument* arg)
+static char *get_first_target_makefile(struct makefile *make)
 {
-    for(size_t i=0;i<make->list_t->size;i++)
+    for (size_t i = 0; i < make->list_t->size; i++)
     {
-        if(make->list_t->list[i]->is_pattern==false)
+        if (make->list_t->list[i]->is_pattern == false)
         {
-             return make->list_t->list[i]->name;
+            return make->list_t->list[i]->name;
         }
     }
     return NULL;
 }
 int main(int argc, char *argv[])
 {
-    struct makefile *make=NULL;
+    struct makefile *make = NULL;
     struct argument *arg = argument_init();
-    
-    
-    
+
     if (get_list_Makefile_target(argc, argv, arg) == 2)
     {
-        return free_and_return_exit_code(make,arg,2,NULL);
+        return free_and_return_exit_code(make, arg, 2, NULL);
     }
     if (arg->flag_h)
     {
-        return free_and_return_exit_code(make,arg,0,"t as vraiment besoin d aide pour make ?allo bassem ?\n");
+        return free_and_return_exit_code(
+            make, arg, 0,
+            "t as vraiment besoin d aide pour make ?allo bassem ?\n");
     }
-    if(arg->size_f==0)
+    if (arg->size_f == 0)
     {
         FILE *test = fopen("Makefile", "r");
         if (test != NULL)
@@ -141,7 +146,7 @@ int main(int argc, char *argv[])
             else
             {
                 fprintf(stderr, "Aucun Makefile trouve\n");
-                return free_and_return_exit_code(make,arg,2,NULL);
+                return free_and_return_exit_code(make, arg, 2, NULL);
             }
         }
     }
@@ -151,13 +156,13 @@ int main(int argc, char *argv[])
         FILE *stream = fopen(arg->list_file[i], "r");
         if (stream == NULL)
         {
-            add_rule_first(arg,strdup(arg->list_file[i]));
-	    continue;
+            add_rule_first(arg, strdup(arg->list_file[i]));
+            continue;
         }
         else if (parser(stream, make) == 2)
         {
-		fclose(stream);
-            return free_and_return_exit_code(make,arg,2,NULL);
+            fclose(stream);
+            return free_and_return_exit_code(make, arg, 2, NULL);
         }
         fclose(stream);
     }
@@ -165,24 +170,28 @@ int main(int argc, char *argv[])
     if (arg->flag_p)
     {
         print_makefile(make);
-        return free_and_return_exit_code(make,arg,0,NULL);
+        return free_and_return_exit_code(make, arg, 0, NULL);
     }
-    if(arg->size_r==0)
+    if (arg->size_r == 0)
     {
-        char* first_target=get_first_target_makefile(make,arg );
-        if(first_target==NULL)
+        char *first_target = get_first_target_makefile(make);
+        if (first_target == NULL)
         {
-            return free_and_return_exit_code(make,arg,2,"No targets dans le Makefile gg\n");
+            return free_and_return_exit_code(
+                make, arg, 2, "minimake: *** No targets. Stop.\n");
         }
         add_rule(arg, strdup(make->list_t->list[0]->name));
-        
     }
     for (size_t i = 0; i < arg->size_r; i++)
     {
-        struct target *main_targ = get_target_with_name(make, arg->list_rule[i]);
+        struct target *main_targ =
+            get_target_with_name(make, arg->list_rule[i]);
         if (main_targ == NULL)
         {
-            return free_and_return_exit_code(make,arg,2,"Target does not exist\n");
+            fprintf(stderr,
+                    "minimake: *** No rule to make target '%s'.  Stop.\n",
+                    arg->list_rule[i]);
+            return free_and_return_exit_code(make, arg, 2, NULL);
         }
         if (check_validity_target_main(make, main_targ) == false)
         {
@@ -190,8 +199,8 @@ int main(int argc, char *argv[])
         }
         if (exec_target_and_dep(make, main_targ) == 2)
         {
-             return free_and_return_exit_code(make,arg,2,NULL);
+            return free_and_return_exit_code(make, arg, 2, NULL);
         }
     }
-    return free_and_return_exit_code(make,arg,0,NULL);
+    return free_and_return_exit_code(make, arg, 0, NULL);
 }

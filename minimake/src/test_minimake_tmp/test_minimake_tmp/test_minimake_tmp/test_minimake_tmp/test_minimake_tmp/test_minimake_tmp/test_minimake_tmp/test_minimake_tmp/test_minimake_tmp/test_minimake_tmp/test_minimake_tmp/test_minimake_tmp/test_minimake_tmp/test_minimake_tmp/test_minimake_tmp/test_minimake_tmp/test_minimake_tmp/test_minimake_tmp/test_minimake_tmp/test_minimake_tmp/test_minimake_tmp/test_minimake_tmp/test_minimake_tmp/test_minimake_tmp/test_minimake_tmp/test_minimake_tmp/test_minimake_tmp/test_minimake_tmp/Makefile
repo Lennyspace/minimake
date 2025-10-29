@@ -1,5 +1,0 @@
-FOO=$(BAR)
-all:
-	@echo The answer is $(FOO)$($(FOO)) and not $4
-BAR=4
-$(FOO)=2
