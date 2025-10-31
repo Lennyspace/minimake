@@ -138,6 +138,11 @@ int exec_target_and_dep(struct makefile *make, struct target *targ)
             get_target_with_name(make, targ->dependencies[i]);
         if (targ_d == NULL)
         {
+            struct stat st;
+            if (stat(targ->dependencies[i], &st) == 0)
+            {
+                continue;
+            }
             fprintf(stderr,
                     "minimake: *** No rule to make target '%s', needed by "
                     "'%s'. Stop.\n",

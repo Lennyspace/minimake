@@ -1,0 +1,4 @@
+-f maketest  
+-f maketest toto
+toto
+-f maketest -f toto

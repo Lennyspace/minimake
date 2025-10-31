@@ -1,0 +1,3 @@
+all:
+	@echo running all
+.PHONY: all

@@ -1,0 +1,7 @@
+t%o: %la
+	echo pattern rule
+
+
+
+otla:
+	echo pattern dep

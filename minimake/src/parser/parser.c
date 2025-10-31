@@ -437,24 +437,23 @@ static void parser_add_dependencies(struct makefile *make, struct target *targ,
         i++;
     }
     char *deps = malloc((lenline - i + 1) * sizeof(char));
-    strcpy(deps, line + i + 1);
 
-    char *token = strtok(deps, " \t");
+    strcpy(deps, line + i + 1);
+    char *deps_ext = get_name_extended(make, deps);
+    free(deps);
+    char *token = strtok(deps_ext, " \t");
+
     while (token)
     {
-        char *dep_ext = get_name_extended(make, token);
-        if (dep_ext[0] != 0)
+        if (deps_ext[0] != 0)
         {
-            add_target_dependencies(targ, dep_ext);
-        }
-        else
-        {
-            free(dep_ext);
+            char *dep_cpy = strdup(token);
+            add_target_dependencies(targ, dep_cpy);
         }
 
         token = strtok(NULL, " \t");
     }
-    free(deps);
+    free(deps_ext);
 }
 
 int parser_target(FILE *file, struct makefile *make, char *line_t)

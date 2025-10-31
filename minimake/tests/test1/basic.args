@@ -1,0 +1,5 @@
+-f Makefile all
+
+-f Makefile
+error
+all

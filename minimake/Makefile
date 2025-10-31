@@ -7,8 +7,8 @@ OBJS=$(SRCS:.c=.o)
 minimake: ${OBJS}
 	${CC} -o $@ ${OBJS}
 
-check:
-	echo test
+check: minimake
+	./tests/tests.sh
 
 clean:
 	${RM} minimake ${OBJS}

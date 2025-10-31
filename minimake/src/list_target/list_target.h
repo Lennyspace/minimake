@@ -20,7 +20,7 @@ struct target
 
     bool is_pattern;
     bool is_phony;
-    
+
     bool has_been_executed;
 };
 
