@@ -14,15 +14,15 @@ A GNU Make clone written in C99. Parses Makefile syntax, expands variables, reso
 
 ```
 src/
-├── main.c                  # Entry point and argument handling
-├── parser/                 # Makefile parsing
-├── minimake/               # Core build logic
-├── list_target/            # Target dependency graph
-├── list_variable/          # Variable storage
-├── extension_var/          # Variable expansion
-├── is_up_to_date/          # Timestamp checking
-├── exec_target/            # Recipe execution
-└── string/                 # String utilities
+|-- main.c                  # Entry point and argument handling
+|-- parser/                 # Makefile parsing
+|-- minimake/               # Core build logic
+|-- list_target/            # Target dependency graph
+|-- list_variable/          # Variable storage
+|-- extension_var/          # Variable expansion
+|-- is_up_to_date/          # Timestamp checking
+|-- exec_target/            # Recipe execution
+`-- string/                 # String utilities
 ```
 
 ## Build & run
@@ -48,4 +48,4 @@ The test suite covers variable expansion, phony targets, pattern rules, up-to-da
 
 ---
 
-EPITA — Systems programming (ING1)
+EPITA - Systems programming (ING1)
